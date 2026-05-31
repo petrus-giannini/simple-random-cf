@@ -1,0 +1,609 @@
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  transition: background 0.4s, color 0.4s;
+}
+
+/* ============================================================
+   THEME BAR (shared)
+   ============================================================ */
+
+.theme-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  z-index: 100;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.theme-bar input[type="range"] {
+  flex: 1;
+  max-width: 160px;
+  cursor: pointer;
+}
+
+/* ============================================================
+   CARD (shared structure)
+   ============================================================ */
+
+.card {
+  max-width: 520px;
+  width: 100%;
+  padding: 3rem 3.5rem;
+  transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+}
+
+.field-group { margin-bottom: 1.5rem; }
+
+.cf-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#cf-output {
+  width: 100%;
+  outline: none;
+  cursor: text;
+  transition: border-color 0.2s;
+}
+
+.copy-btn {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.copy-btn svg { width: 18px; height: 18px; }
+
+.copy-tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.copy-tooltip.show { opacity: 1; }
+
+.gen-btn {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.gen-btn:active { transform: scale(0.98); }
+
+.gen-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  transform: scale(0);
+  animation: ripple 0.5s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+@keyframes flash {
+  0%,100% { border-color: var(--border, #2a2a2a); }
+  50% { border-color: var(--accent, #e8ff00); box-shadow: 0 0 12px var(--accent, #e8ff00); }
+}
+
+.flashing { animation: flash 0.4s ease; }
+
+/* ============================================================
+   TEMA: ACIDO (default — stile originale)
+   ============================================================ */
+
+body.theme-acido {
+  background: #0d0d0d;
+  color: #f0f0f0;
+  font-family: 'IBM Plex Mono', monospace;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, #2a2a2a 39px, #2a2a2a 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, #2a2a2a 39px, #2a2a2a 40px);
+  background-size: 40px 40px;
+}
+
+.theme-acido .theme-bar {
+  background: rgba(13,13,13,0.92);
+  border-bottom: 1px solid #2a2a2a;
+  color: #555;
+}
+
+.theme-acido #theme-label { color: #e8ff00; }
+.theme-acido #theme-slider { accent-color: #e8ff00; }
+
+.theme-acido .card {
+  background: #141414;
+  border: 2px solid #2a2a2a;
+  position: relative;
+}
+
+.theme-acido .card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid #e8ff00;
+  transform: translate(6px, 6px);
+  z-index: -1;
+}
+
+.theme-acido .badge {
+  display: inline-block;
+  background: #e8ff00;
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  padding: 2px 8px;
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+}
+
+.theme-acido h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin-bottom: 2.5rem;
+  color: #f0f0f0;
+}
+
+.theme-acido h1 span { color: #e8ff00; }
+
+.theme-acido .field-label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.theme-acido #cf-output {
+  background: #000;
+  border: 1.5px solid #2a2a2a;
+  color: #e8ff00;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  padding: 0.85rem 3.5rem 0.85rem 1rem;
+  caret-color: #e8ff00;
+}
+
+.theme-acido #cf-output::placeholder { color: #2a2a2a; letter-spacing: 0.1em; }
+.theme-acido #cf-output:focus { border-color: #e8ff00; }
+
+.theme-acido .copy-btn { color: #555; }
+.theme-acido .copy-btn:hover { color: #e8ff00; }
+
+.theme-acido .copy-tooltip {
+  background: #e8ff00;
+  color: #000;
+}
+
+.theme-acido .gen-btn {
+  background: #e8ff00;
+  color: #000;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 1rem;
+}
+
+.theme-acido .gen-btn:hover { background: #f5ff4d; }
+
+.theme-acido .divider {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 1.5rem 0;
+}
+
+.theme-acido .footer-note {
+  font-size: 0.62rem;
+  color: #555;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+}
+
+.theme-acido .footer-note span { color: #444; }
+
+/* ============================================================
+   TEMA: STALINGRADO (costruttivismo sovietico)
+   ============================================================ */
+
+body.theme-stalingrado {
+  background: #0a0a0a;
+  color: #f0e6c8;
+  font-family: 'IBM Plex Mono', monospace;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(204,26,26,0.04) 18px, rgba(204,26,26,0.04) 19px),
+    repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(204,26,26,0.04) 18px, rgba(204,26,26,0.04) 19px);
+}
+
+.theme-stalingrado .theme-bar {
+  background: rgba(10,10,10,0.95);
+  border-bottom: 3px solid #cc1a1a;
+  color: #666;
+}
+
+.theme-stalingrado #theme-label { color: #cc1a1a; }
+.theme-stalingrado #theme-slider { accent-color: #cc1a1a; }
+
+.theme-stalingrado .card {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-left: 5px solid #cc1a1a;
+  position: relative;
+}
+
+.theme-stalingrado .card::before {
+  content: '★';
+  position: absolute;
+  top: -0.8rem;
+  right: 1.5rem;
+  font-size: 1.2rem;
+  color: #cc1a1a;
+  background: #111;
+  padding: 0 0.3rem;
+}
+
+.theme-stalingrado .badge {
+  display: inline-block;
+  background: #cc1a1a;
+  color: #f0e6c8;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  padding: 2px 10px;
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+  padding-right: 1.2rem;
+}
+
+.theme-stalingrado h1 {
+  font-family: 'Anton', sans-serif;
+  font-size: 3.8rem;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  margin-bottom: 2.5rem;
+  color: #f0e6c8;
+  text-transform: uppercase;
+}
+
+.theme-stalingrado h1 span { color: #cc1a1a; }
+
+.theme-stalingrado .field-label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #cc1a1a;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid #cc1a1a;
+  padding-left: 0.5rem;
+}
+
+.theme-stalingrado #cf-output {
+  background: #000;
+  border: 1px solid #2a2a2a;
+  border-left: 3px solid #cc1a1a;
+  color: #f0e6c8;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  padding: 0.85rem 3.5rem 0.85rem 1rem;
+}
+
+.theme-stalingrado #cf-output::placeholder { color: #2a2a2a; }
+.theme-stalingrado #cf-output:focus { border-color: #cc1a1a; }
+
+.theme-stalingrado .copy-btn { color: #555; }
+.theme-stalingrado .copy-btn:hover { color: #cc1a1a; }
+
+.theme-stalingrado .copy-tooltip {
+  background: #cc1a1a;
+  color: #f0e6c8;
+}
+
+.theme-stalingrado .gen-btn {
+  background: #cc1a1a;
+  color: #f0e6c8;
+  font-family: 'Anton', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 1rem;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%);
+}
+
+.theme-stalingrado .gen-btn:hover { background: #e02020; }
+
+.theme-stalingrado .divider {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.theme-stalingrado .divider::after {
+  content: '✦';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #111;
+  color: #cc1a1a;
+  padding: 0 0.5rem;
+  font-size: 0.7rem;
+}
+
+.theme-stalingrado .footer-note {
+  font-size: 0.62rem;
+  color: #666;
+  line-height: 1.7;
+}
+
+.theme-stalingrado .footer-note span { color: #444; }
+
+/* ============================================================
+   TEMA: CLASSICO CHIARO (importato da yaiig generatore iban)
+   ============================================================ */
+
+body.theme-classico-chiaro {
+  background: #f5f5f5;
+  color: #222;
+  font-family: 'Inter', sans-serif;
+}
+
+.theme-classico-chiaro .theme-bar {
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  color: #888;
+}
+
+.theme-classico-chiaro #theme-label { color: #555; }
+.theme-classico-chiaro #theme-slider { accent-color: #1a5ccc; }
+
+.theme-classico-chiaro .card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.theme-classico-chiaro .badge {
+  display: inline-block;
+  background: #e8f0ff;
+  color: #1a5ccc;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+
+.theme-classico-chiaro h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+  color: #111;
+}
+
+.theme-classico-chiaro h1 span { color: #1a5ccc; }
+
+.theme-classico-chiaro .field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.theme-classico-chiaro #cf-output {
+  background: #fafafa;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #bbb;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 0.75rem 3.5rem 0.75rem 1rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.theme-classico-chiaro #cf-output.has-value { color: #111; border-color: #1a5ccc; }
+.theme-classico-chiaro #cf-output::placeholder { color: #ccc; }
+.theme-classico-chiaro #cf-output:focus { border-color: #1a5ccc; outline: none; }
+
+.theme-classico-chiaro .copy-btn { color: #aaa; }
+.theme-classico-chiaro .copy-btn:hover { color: #1a5ccc; }
+
+.theme-classico-chiaro .copy-tooltip {
+  background: #1a5ccc;
+  color: #fff;
+  border-radius: 3px;
+}
+
+.theme-classico-chiaro .gen-btn {
+  background: #1a5ccc;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
+  border-radius: 4px;
+}
+
+.theme-classico-chiaro .gen-btn:hover { background: #1449a8; }
+
+.theme-classico-chiaro .divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 1.5rem 0;
+}
+
+.theme-classico-chiaro .footer-note {
+  font-size: 0.72rem;
+  color: #999;
+  line-height: 1.7;
+}
+
+.theme-classico-chiaro .footer-note span { color: #bbb; }
+
+/* ============================================================
+   TEMA: CLASSICO SCURO (importato da yaiig generatore iban)
+   ============================================================ */
+
+body.theme-classico-scuro {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+}
+
+.theme-classico-scuro .theme-bar {
+  background: rgba(26,26,26,0.96);
+  border-bottom: 1px solid #2a2a2a;
+  color: #666;
+}
+
+.theme-classico-scuro #theme-label { color: #6ea3ff; }
+.theme-classico-scuro #theme-slider { accent-color: #6ea3ff; }
+
+.theme-classico-scuro .card {
+  background: #242424;
+  border: 1px solid #333;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+.theme-classico-scuro .badge {
+  display: inline-block;
+  background: #1c2e4a;
+  color: #6ea3ff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+
+.theme-classico-scuro h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+  color: #f0f0f0;
+}
+
+.theme-classico-scuro h1 span { color: #6ea3ff; }
+
+.theme-classico-scuro .field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+.theme-classico-scuro #cf-output {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #555;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 0.75rem 3.5rem 0.75rem 1rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.theme-classico-scuro #cf-output.has-value { color: #e0e0e0; border-color: #6ea3ff; }
+.theme-classico-scuro #cf-output::placeholder { color: #333; }
+.theme-classico-scuro #cf-output:focus { border-color: #6ea3ff; outline: none; }
+
+.theme-classico-scuro .copy-btn { color: #555; }
+.theme-classico-scuro .copy-btn:hover { color: #6ea3ff; }
+
+.theme-classico-scuro .copy-tooltip {
+  background: #6ea3ff;
+  color: #000;
+  border-radius: 3px;
+}
+
+.theme-classico-scuro .gen-btn {
+  background: #2a4a80;
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
+  border-radius: 4px;
+}
+
+.theme-classico-scuro .gen-btn:hover { background: #3a5fa0; }
+
+.theme-classico-scuro .divider {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 1.5rem 0;
+}
+
+.theme-classico-scuro .footer-note {
+  font-size: 0.72rem;
+  color: #666;
+  line-height: 1.7;
+}
+
+.theme-classico-scuro .footer-note span { color: #444; }
