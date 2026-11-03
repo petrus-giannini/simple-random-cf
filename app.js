@@ -3,54 +3,54 @@
 //  Regole ufficiali Agenzia delle Entrate
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── Dati anagrafici ──────────────────────────────────────────────────────────
+// ── Dati anagrafici (caricati da file CSV nella root del sito) ───────────────
 
-const NOMI_M = [
-  "MARIO","LUIGI","GIUSEPPE","ANTONIO","GIOVANNI","ROBERTO","STEFANO","MARCO",
-  "LUCA","ANDREA","DAVIDE","MATTEO","ALESSANDRO","SIMONE","FRANCO","SERGIO",
-  "CARLO","RICCARDO","PAOLO","ANGELO","PIETRO","ENRICO","GIORGIO","CLAUDIO",
-  "MASSIMO","VINCENZO","EMANUELE","NICOLA","FILIPPO","TOMMASO"
-];
+const FILE_NOMI_M  = "nomi_maschili.csv";
+const FILE_NOMI_F  = "nomi_femminili.csv";
+const FILE_COGNOMI = "cognomi.csv";
+const FILE_COMUNI  = "COMUNI.csv"; // intestazioni: "Denominazione IT";"Codice AT"
 
-const NOMI_F = [
-  "MARIA","ANNA","GIUSEPPINA","ROSA","ANGELA","LUCIA","TERESA","CARMELA",
-  "GIOVANNA","ELENA","LAURA","FRANCESCA","GIULIA","SARA","VALENTINA",
-  "CHIARA","ALESSIA","SOFIA","GIORGIA","FEDERICA","ROBERTA","PAOLA",
-  "MARINA","SERENA","MONICA","BARBARA","CRISTINA","DANIELA","ELISA","IRENE"
-];
+let NOMI_M = [];
+let NOMI_F = [];
+let COGNOMI = [];
+let COMUNI = []; // { nome, codice }
 
-const COGNOMI = [
-  "ROSSI","FERRARI","RUSSO","ESPOSITO","BIANCHI","ROMANO","COLOMBO","RICCI",
-  "MARINO","GRECO","BRUNO","GALLO","CONTI","DELUCA","MANCINI","COSTA",
-  "GIORDANO","RIZZO","LOMBARDI","MORETTI","BARBIERI","FONTANA","SANTORO",
-  "MARINI","RINALDI","CARUSO","FERRARA","GALLI","MARTINI","LEONE","LONGO",
-  "GENTILE","MARTINELLI","VITALE","LOMBARDO","SERRA","COPPOLA","DEROSA",
-  "PELLEGRINI","PALUMBO","FERRETTI","FERRARO","SILVESTRI","MAZZA","VALENTINI",
-  "GIULIANI","MONTI","PIRAS","RIVA","CATTANEO"
-];
+/**
+ * Scarica un CSV (separatore ";", prima riga = intestazioni) e restituisce
+ * le righe come array di array di celle.
+ */
+async function caricaCsv(url) {
+  const risposta = await fetch(url, { cache: "no-cache" });
+  if (!risposta.ok) throw new Error(url + ": HTTP " + risposta.status);
+  const testo = (await risposta.text()).replace(/^\uFEFF/, "");
+  return testo
+    .split(/\r?\n/)
+    .slice(1) // intestazioni
+    .filter(riga => riga.trim() !== "")
+    .map(riga => riga.split(";").map(c => c.trim()));
+}
 
-const COMUNI = [
-  { codice: "H501" }, // Roma
-  { codice: "F205" }, // Milano
-  { codice: "L736" }, // Napoli
-  { codice: "A944" }, // Torino
-  { codice: "D969" }, // Genova
-  { codice: "A662" }, // Bologna
-  { codice: "L219" }, // Firenze
-  { codice: "L682" }, // Venezia
-  { codice: "G273" }, // Palermo
-  { codice: "C352" }, // Catania
-  { codice: "B157" }, // Bari
-  { codice: "L378" }, // Trieste
-  { codice: "E379" }, // Verona
-  { codice: "G482" }, // Pescara
-  { codice: "H223" }, // Parma
-  { codice: "C129" }, // Cagliari
-  { codice: "D284" }, // Ferrara
-  { codice: "G388" }, // Perugia
-  { codice: "I628" }, // Salerno
-  { codice: "L424" }, // Udine
-];
+async function caricaDati() {
+  const [nomiM, nomiF, cognomi, comuni] = await Promise.all([
+    caricaCsv(FILE_NOMI_M),
+    caricaCsv(FILE_NOMI_F),
+    caricaCsv(FILE_COGNOMI),
+    caricaCsv(FILE_COMUNI)
+  ]);
+
+  NOMI_M  = nomiM.map(r => r[0]).filter(Boolean);
+  NOMI_F  = nomiF.map(r => r[0]).filter(Boolean);
+  COGNOMI = cognomi.map(r => r[0]).filter(Boolean);
+
+  // Si scartano i codici non validi (es. "ND" = non disponibile)
+  COMUNI = comuni
+    .map(r => ({ nome: r[0], codice: r[1] }))
+    .filter(c => /^[A-Z]\d{3}$/.test(c.codice));
+
+  if (!NOMI_M.length || !NOMI_F.length || !COGNOMI.length || !COMUNI.length) {
+    throw new Error("Uno o più file CSV sono vuoti");
+  }
+}
 
 const MESI = "ABCDEHLMPRST"; // Tabella mesi ufficiale
 
@@ -80,6 +80,18 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Normalizza un nome/cognome per il calcolo del CF: maiuscolo, senza accenti,
+ * senza spazi, apostrofi, trattini o altri caratteri non alfabetici.
+ */
+function normalizza(s) {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+}
+
 function estraiVocali(s) {
   return s.replace(/[^AEIOU]/g, '');
 }
@@ -94,6 +106,7 @@ function estraiConsonanti(s) {
  * Codifica cognome: consonanti + vocali + X (fino a 3 caratteri)
  */
 function codificaCognome(cognome) {
+  cognome = normalizza(cognome);
   const c = estraiConsonanti(cognome);
   const v = estraiVocali(cognome);
   return (c + v + "XXX").slice(0, 3);
@@ -105,6 +118,7 @@ function codificaCognome(cognome) {
  *  - altrimenti: consonanti + vocali + X (fino a 3)
  */
 function codificaNome(nome) {
+  nome = normalizza(nome);
   const c = estraiConsonanti(nome);
   const v = estraiVocali(nome);
   if (c.length >= 4) {
@@ -217,8 +231,63 @@ document.addEventListener("DOMContentLoaded", () => {
   const tooltip  = document.getElementById("copy-tooltip");
   const slider   = document.getElementById("theme-slider");
 
+  const keepBox  = document.getElementById("keep-memory");
+  const keepCount = document.getElementById("keep-count");
+  const spacer   = document.getElementById("scroll-spacer");
+
   // Imposta il numero massimo dello slider in base ai temi disponibili
   slider.max = THEMES.length - 1;
+
+  let altezzaSpacer = 0; // spazio aggiunto in fondo per consentire lo scorrimento
+
+  function righe() {
+    return output.value === "" ? [] : output.value.split("\n");
+  }
+
+  function aggiornaContatore() {
+    const n = righe().length;
+    keepCount.textContent = (keepBox.checked && n) ? "(" + n + ")" : "";
+  }
+
+  // Adatta l'altezza del box al numero di righe
+  function adattaAltezza() {
+    output.style.height = "auto";
+    const bordi = output.offsetHeight - output.clientHeight;
+    output.style.height = (output.scrollHeight + bordi) + "px";
+  }
+
+  /**
+   * Esegue la modifica e poi fa scorrere la pagina in modo che il pulsante
+   * "Genera" resti nella stessa posizione sullo schermo (e quindi sotto il mouse).
+   */
+  function mantieniPulsanteFermo(modifica) {
+    const prima = genBtn.getBoundingClientRect().top;
+    modifica();
+    const delta = genBtn.getBoundingClientRect().top - prima;
+    if (delta === 0) return;
+
+    // Se la pagina non è abbastanza lunga per scorrere, si aggiunge spazio in fondo
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const mancante = window.scrollY + delta - max;
+    if (mancante > 0) {
+      altezzaSpacer += mancante;
+      spacer.style.height = altezzaSpacer + "px";
+    }
+    window.scrollBy({ top: delta, left: 0, behavior: "instant" });
+  }
+
+  // Riporta la pagina allo stato iniziale: box vuoto, nessuno spazio extra, scroll in cima
+  function ripristinaStatoIniziale() {
+    output.value = "";
+    output.classList.remove("has-value");
+    output.style.height = "";
+    altezzaSpacer = 0;
+    spacer.style.height = "0px";
+    aggiornaContatore();
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }
+
+  keepBox.addEventListener("change", aggiornaContatore);
 
   // Genera CF al click del pulsante
   genBtn.addEventListener("click", function (e) {
@@ -235,23 +304,34 @@ document.addEventListener("DOMContentLoaded", () => {
     this.appendChild(ripple);
     setTimeout(() => ripple.remove(), 600);
 
-    // Genera e mostra il CF
     const cf = generaCodiceFiscale();
-    output.value = cf;
-    output.classList.add("has-value", "flashing");
-    setTimeout(() => output.classList.remove("flashing"), 400);
+
+    mantieniPulsanteFermo(() => {
+      // Con "Conserva" attivo il nuovo CF va a capo nel box, altrimenti lo sostituisce
+      output.value = (keepBox.checked && output.value !== "") ? output.value + "\n" + cf : cf;
+      output.classList.add("has-value");
+      adattaAltezza();
+    });
+
+    aggiornaContatore();
   });
 
-  // Copia negli appunti
+  // Copia negli appunti: copia il contenuto del box, poi lo svuota e riporta la pagina all'inizio
   copyBtn.addEventListener("click", () => {
     if (!output.value) return;
-    navigator.clipboard.writeText(output.value).then(() => {
+    const testo = output.value;
+
+    const fatto = () => {
       tooltip.classList.add("show");
       setTimeout(() => tooltip.classList.remove("show"), 1500);
-    }).catch(() => {
-      // Fallback per browser che non supportano clipboard API
+      ripristinaStatoIniziale();
+    };
+
+    navigator.clipboard.writeText(testo).then(fatto).catch(() => {
+      // Fallback per browser senza Clipboard API
       output.select();
       document.execCommand("copy");
+      fatto();
     });
   });
 
@@ -267,4 +347,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Tema iniziale
   applyTheme(0);
+
+  // Caricamento dei dati dai file CSV: il pulsante resta disabilitato fino al termine
+  const placeholderOriginale = output.placeholder;
+  genBtn.disabled = true;
+  output.placeholder = "Caricamento dati…";
+  caricaDati()
+    .then(() => {
+      genBtn.disabled = false;
+      output.placeholder = placeholderOriginale;
+    })
+    .catch(err => {
+      console.error("Errore nel caricamento dei CSV:", err);
+      output.placeholder = "Errore: dati non caricati (serve un server web)";
+    });
 });

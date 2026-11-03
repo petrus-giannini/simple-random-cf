@@ -25,7 +25,7 @@
     <div class="field-group">
       <label class="field-label" for="cf-output">CF</label>
       <div class="cf-wrapper">
-        <input type="text" id="cf-output" placeholder="—— —— —— —— —— —" readonly>
+        <textarea id="cf-output" rows="1" wrap="off" spellcheck="false" placeholder="—— —— —— —— —— —" readonly></textarea>
         <button class="copy-btn" id="copy-btn" title="Copia negli appunti" aria-label="Copia">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -36,6 +36,12 @@
       </div>
     </div>
 
+    <label class="keep-option" for="keep-memory">
+      <input type="checkbox" id="keep-memory">
+      <span class="keep-text">Conserva</span>
+      <span class="keep-count" id="keep-count"></span>
+    </label>
+
     <button class="gen-btn" id="gen-btn">⚡ Genera Random CF</button>
 
     <hr class="divider">
@@ -45,6 +51,9 @@
       <span>Solo a scopo dimostrativo · Non valido ai fini fiscali</span>
     </p>
   </div>
+
+  <!-- Spazio dinamico in fondo: permette alla pagina di scorrere mentre il box CF cresce -->
+  <div id="scroll-spacer" aria-hidden="true"></div>
 
   <script src="app.js"></script>
 </body>
